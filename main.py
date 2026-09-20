@@ -12,7 +12,7 @@ logger = logging.getLogger("ki-plugin")
 
 app = FastAPI(title="KI-Plugin Backend (generisch, Site-unabhängig)")
 
-ERLAUBTE_ORIGINS = [
+ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
     "null",
@@ -20,15 +20,15 @@ ERLAUBTE_ORIGINS = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ERLAUBTE_ORIGINS,
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["*"],
 )
 
-ERLAUBTE_AKTIONEN = {"click", "type", "check", "radio", "select"}
+ALLOWED_ACTIONS = {"click", "type", "check", "radio", "select"}
 
-TYP_ZU_AKTION = {
+TYPE_TO_ACTION = {
     "button": {"click"},
     "text-input": {"type"},
     "checkbox": {"check"},
@@ -43,270 +43,270 @@ class WebElement(BaseModel):
     id: str
     typ: str
     text: str
-    hinweis: Optional[str] = ""
-    istNavigationsLink: Optional[bool] = False
+    note: Optional[str] = ""
+    isNavigationLin: Optional[bool] = False
     formId: Optional[str] = None
-    istSubmit: Optional[bool] = False
-    optionen: Optional[list[str]] = None
+    isSubmit: Optional[bool] = False
+    options: Optional[list[str]] = None
 
 
-class WebDaten(BaseModel):
-    gesprochener_text: str
-    elemente: list[WebElement]
+class WebData(BaseModel):
+    spoken_text: str
+    elements: list[WebElement]
 
 
-SYSTEM_ANWEISUNG = (
-    "Du bist eine generische KI fuer ein Barrierefreiheits-/Sprachsteuerungs-Plugin, das auf "
-    "BELIEBIGEN Webseiten laeuft. Du kennst die Webseite NICHT im Voraus - deine einzige "
-    "Informationsquelle ist die Liste 'Verfuegbare Elemente', die bei jeder Anfrage frisch "
-    "von der AKTUELLEN Seite gescannt wurde. Alle Elemente in dieser Liste befinden sich also "
-    "bereits auf der Seite, auf der sich der Nutzer JETZT befindet.\n\n"
+SYSTEM_INSTRUCTION = (
+    "You are a generic AI for an accessibility/voice control plugin that runs on "
+    "ANY websites. You do NOT know the website in advance—your only "
+    "source of information is the 'Available Elements' list, which is freshly "
+    "scanned from the CURRENT page with every request. This means that all elements in this list are "
+    "already on the page where the user is NOW.\n\n"
 
-    "STRUKTUR DER ELEMENTE:\n"
-    "- 'id': eindeutige ID, MUSS exakt fuer 'ziel_id' uebernommen werden.\n"
-    "- 'typ': 'button', 'text-input', 'checkbox', 'radio' oder 'select'.\n"
-    "- 'text': sichtbarer Text/Label/Platzhalter des Elements.\n"
-    "- 'hinweis': optionaler Zusatz-Kontext des Entwicklers, hat Vorrang vor Vermutungen.\n"
-    "- 'istNavigationsLink': true, wenn ein Klick zu einer ANDEREN Seite fuehrt.\n"
-    "- 'formId': gruppiert Elemente desselben <form>.\n"
-    "- 'istSubmit': true, wenn dieser Button das Formular mit gleicher formId absendet.\n"
-    "- 'optionen': bei 'select' die waehlbaren Texte.\n\n"
+    "ELEMENT STRUCTURE:\n"
+    "- 'id': unique ID; MUST be copied exactly for 'target_id'.\n"
+    "- 'type': 'button', 'text-input', 'checkbox', 'radio', or 'select'.\n"
+    "- 'text': visible text/label/placeholder of the element.\n"
+    "- 'note': optional additional context provided by the developer; takes precedence over assumptions.\n"
+    "- 'isNavigationLin': true if a click leads to a DIFFERENT page.\n"
+    "- 'formId': Groups elements of the same <form>.\n"
+    "- 'isSubmit': true if this button submits the form with the same formId.\n"
+    "- 'options': For 'select', the selectable text options.\n\n"
 
-    "KRITISCHE REGEL 1 - KEINE ERFUNDENEN IDs: Verwende AUSSCHLIESSLICH 'ziel_id'-Werte, die "
-    "EXAKT und WORTWOERTLICH in der Liste vorkommen. Existiert kein passendes Element, lasse den "
-    "Schritt weg. Rate NIEMALS ein zufaelliges Element, wenn nichts thematisch passt.\n\n"
+    "CRITICAL RULE 1 - NO MADE-UP IDs: Use ONLY 'target_id' values that "
+    "appear EXACTLY and WORD-FOR-WORD in the list. If no matching item exists, skip the "
+    "step. NEVER guess a random item if nothing fits the theme.\n\n"
 
-    "KRITISCHE REGEL 2 - KEINE UNNOETIGE NAVIGATION: Da ALLE Elemente in der Liste bereits auf "
-    "der AKTUELLEN Seite existieren, brauchst du NIEMALS einen Navigations-Klick, wenn die "
-    "eigentlich benoetigten Felder/Buttons (text-input, checkbox, radio, select, oder ein "
-    "passender Absende-Button) schon in der Liste stehen. Klicke nur auf ein Element mit "
-    "'istNavigationsLink': true, wenn die aktuelle Seite KEIN passendes Element fuer den "
-    "Hauptwunsch des Nutzers enthaelt.\n\n"
+    "CRITICAL RULE 2 - NO UNNECESSARY NAVIGATION: Since ALL elements in the list already exist on "
+    "the CURRENT page, you NEVER need a navigation click if the "
+    "fields/buttons actually needed (text input, checkbox, radio, select, or a "
+    "suitable submit button) are already in the list. Only click on an element with "
+    "'isNavigationLin': true, if the current page does NOT contain a suitable element for the "
+    "user's main request.\n\n"
 
-    "KRITISCHE REGEL 3 - KEINE ZWECKENTFREMDUNG VORHANDENER FELDER: Wenn die aktuelle Seite "
-    "KEIN thematisch passendes Element fuer den Hauptwunsch des Nutzers enthaelt (z.B. Nutzer "
-    "will 'Essen bestellen', aber es gibt nur ein Krankmeldungs-Feld auf dieser Seite), "
-    "verwende NIEMALS ein themenfremdes Feld/Checkbox/Button als Ersatz. Gib in diesem Fall NUR "
-    "einen Klick auf den passenden Navigations-Link zurueck (falls vorhanden) und sonst nichts.\n\n"
+    "CRITICAL RULE 3 - DO NOT USE EXISTING FIELDS FOR UNRELATED PURPOSES: If the current page "
+    "does not contain an element relevant to the user's primary intent (e.g., the user "
+    "wants to 'order food', but there is only a sick leave form field on this page), "
+    "NEVER use a field/checkbox/button unrelated to the topic as a substitute. In this case, ONLY "
+    "provide a click back to the appropriate navigation link (if available) and nothing else.\n\n"
 
-    "FORMULARE AUTOMATISCH ABSENDEN: Wenn der Nutzer ein Feld/eine Checkbox mit einer 'formId' "
-    "ausfuellt und es einen Button mit DERSELBEN formId und 'istSubmit': true gibt, fuege am "
-    "ENDE automatisch einen 'click' auf diesen Button hinzu, auch ohne explizites 'absenden'.\n\n"
+    "AUTOMATICALLY SUBMIT FORMS: If the user fills in a field/checkbox with a 'formId' "
+    "and there is a button with the SAME formId and 'isSubmit': true, automatically add a 'click' on that button at the "
+    "END, even without an explicit 'submit'.\n\n"
 
-    "MEHRERE SCHRITTE: Bei mehreren Wuenschen in einem Satz erstelle fuer JEDEN Schritt ein "
-    "eigenes Objekt, in der richtigen Reihenfolge.\n\n"
+    "MULTIPLE STEPS: If there are multiple requests in a single sentence, create a "
+    "separate object for EACH step, in the correct order.\n\n"
 
-    "TEILWEISE AUSFUEHRUNG: Fuehre so viele Schritte wie moeglich aus. Gib NUR [] zurueck, wenn "
-    "ABSOLUT KEIN Element passt, auch keine Navigation.\n\n"
+    "PARTIAL IMPLEMENTATION: Perform as many steps as possible. Return [] ONLY if "
+    "ABSOLUTELY NO element matches, not even navigation.\n\n"
 
-    "AKTIONEN (nur passend zum Element-Typ):\n"
-    "- 'click': nur fuer 'button'.\n"
-    "- 'type': nur fuer 'text-input'. Text MUSS im Feld 'wert' stehen.\n"
-    "- 'check': nur fuer 'checkbox'. 'wert' MUSS 'true' oder 'false' sein.\n"
-    "- 'radio': nur fuer 'radio'.\n"
-    "- 'select': nur fuer 'select'. 'wert' MUSS exakt einer Option aus 'optionen' entsprechen.\n\n"
+    "ACTIONS (only applicable to the element type):\n"
+    "- 'click': only for 'button'.\n"
+    "- 'type': only for 'text-input'. Text MUST be entered in the 'value' field.\n"
+    "- 'check': only for 'checkbox'. 'value' MUST be 'true' or 'false'.\n"
+    "- 'radio': only for 'radio'.\n"
+    "- 'select': only for 'select'. 'value' MUST match exactly one option from 'options'.\n\n"
 
-    "Antworte AUSSCHLIESSLICH mit einer JSON-Liste, ohne Markdown, ohne Erklaerung:\n"
+    "Respond ONLY with a JSON list, without Markdown, without any explanation:\n"
     "[\n"
-    '  {"aktion": "click"|"type"|"check"|"radio"|"select", "ziel_id": "ELEMENT_ID", "wert": "TEXT_ODER_TRUE_ODER_LEER"}\n'
+    '  {"action": "click"|"type"|"check"|"radio"|"select", "target_id": "ELEMENT_ID", "value": "TEXT_ODER_TRUE_ODER_LEER"}\n'
     "]"
 )
 
 
-def bereinige_llm_antwort(text: str) -> str:
+def clean_llm_response(text: str) -> str:
     text = text.strip()
     if text.startswith("```"):
-        teile = text.split("```")
-        if len(teile) >= 2:
-            text = teile[1]
+        parts = text.split("```")
+        if len(parts) >= 2:
+            text = parts[1]
             if text.startswith("json"):
                 text = text[4:]
     return text.strip()
 
 
-STOPPWOERTER = {
-    "der", "die", "das", "ein", "eine", "einen", "einem", "einer", "und", "oder", "ist",
-    "es", "ich", "mein", "meine", "meinen", "meinem", "kann", "bitte", "kannst", "du",
-    "zu", "den", "dem", "im", "in", "nicht", "hat", "sich", "auf", "fuer", "mit", "von",
-    "sie", "wir", "ihr", "sind", "war", "wird", "wurde", "haben", "wenn", "weil", "dass",
+STOPWORDS = {
+    "the", "the", "the", "a", "a", "a", "a", "a", "and", 'or', "is",
+    "it", "I", "my", "mine", "my", "my", "can", "please", 'can', "you",
+    "to", "the", "the", "in", 'in', "not", "has", "itself", "on", "for", 'with', "from",
+    "she", "we", "you", "are", "was", "will", "was", "have", "if", 'because', "that",
 }
 
 
-def tokenisiere(text: str) -> set:
-    bereinigt = "".join(ch.lower() if ch.isalnum() else " " for ch in text)
-    woerter = {w for w in bereinigt.split() if len(w) > 2 and w not in STOPPWOERTER}
-    return woerter
+def tokenize(text: str) -> set:
+    cleaned = "".join(ch.lower() if ch.isalnum() else " " for ch in text)
+    words = {w for w in cleaned.split() if len(w) > 2 and w not in STOPWORDS}
+    return words
 
 
-def woerter_aehnlich(a: str, b: str) -> bool:
-    kurz, lang = (a, b) if len(a) <= len(b) else (b, a)
-    if len(kurz) < 4:
+def words_similar(a: str, b: str) -> bool:
+    short, long = (a, b) if len(a) <= len(b) else (b, a)
+    if len(short) < 4:
         return a == b
-    return kurz in lang
+    return short in long
 
 
-def hat_ueberlappung(befehl_tokens: set, vergleichs_tokens: set) -> bool:
-    if not vergleichs_tokens:
+def has_overlap(command_tokens: set, comparison_tokens: set) -> bool:
+    if not comparison_tokens:
         return True
-    for bt in befehl_tokens:
-        for vt in vergleichs_tokens:
-            if woerter_aehnlich(bt, vt):
+    for bt in command_tokens:
+        for vt in comparison_tokens:
+            if words_similar(bt, vt):
                 return True
     return False
 
 
-def hat_thematischen_bezug(befehl_tokens: set, element: WebElement) -> bool:
-    element_text = f"{element.text} {element.hinweis or ''}"
-    return hat_ueberlappung(befehl_tokens, tokenisiere(element_text))
+def has_a_thematic_connection(command_tokens: set, element: WebElement) -> bool:
+    element_text = f"{element.text} {element.note or ''}"
+    return has_overlap(command_tokens, tokenize(element_text))
 
 
-def validiere_aktionen(aktionen, elemente: list[WebElement], gesprochener_text: str) -> list[dict]:
-    element_map = {e.id: e for e in elemente}
+def validate_actions(actions, elements: list[WebElement], spoken_text: str) -> list[dict]:
+    element_map = {e.id: e for e in elements}
 
-    if not isinstance(aktionen, list):
-        aktionen = []
+    if not isinstance(actions, list):
+        actions = []
 
-    befehl_tokens = tokenisiere(gesprochener_text)
+    command_tokens = tokenize(spoken_text)
 
-    rohliste = []
-    for eintrag in aktionen:
-        if not isinstance(eintrag, dict):
+    rawList = []
+    for entry in actions:
+        if not isinstance(entry, dict):
             continue
 
-        aktion = eintrag.get("aktion")
-        ziel_id = eintrag.get("ziel_id")
-        wert = eintrag.get("wert", "")
+        action = entry.get("action")
+        target_id = entry.get("target_id")
+        value = entry.get("value", "")
 
-        if aktion not in ERLAUBTE_AKTIONEN or not ziel_id:
+        if action not in ALLOWED_ACTIONS or not target_id:
             continue
-        if ziel_id not in element_map:
-            logger.warning("Verworfen: erfundene/unbekannte ziel_id '%s'", ziel_id)
-            continue
-
-        element = element_map[ziel_id]
-        if aktion not in TYP_ZU_AKTION.get(element.typ, set()):
-            logger.warning("Verworfen: Aktion '%s' passt nicht zu Typ '%s' (ziel_id='%s')", aktion, element.typ, ziel_id)
+        if target_id not in element_map:
+            logger.warning("Rejected: fictitious/unknown target_id '%s'", target_id)
             continue
 
-        rohliste.append({"aktion": aktion, "ziel_id": ziel_id, "wert": wert})
+        element = element_map[target_id]
+        if action not in TYPE_TO_ACTION.get(element.typ, set()):
+            logger.warning("Rejected: Action '%s' does not match the type '%s' (target_id='%s')", action, element.typ, target_id)
+            continue
 
-    for eintrag in list(rohliste):
-        if eintrag["aktion"] != "click":
+        rawList.append({"action": action, "target_id": target_id, "value": value})
+
+    for entry in list(rawList):
+        if entry["action"] != "click":
             continue
-        element = element_map[eintrag["ziel_id"]]
-        if not element.istNavigationsLink or element.istSubmit:
+        element = element_map[entry["target_id"]]
+        if not element.isNavigationLin or element.isSubmit:
             continue
-        if hat_thematischen_bezug(befehl_tokens, element):
+        if has_a_thematic_connection(command_tokens, element):
             continue
         logger.warning(
-            "Plausibilitaetscheck (Navigation): '%s' (Text='%s') hat keinen Wortbezug - verworfen.",
-            eintrag["ziel_id"], element.text
+            "Validation Check (Navigation): '%s' (Text='%s') has no connection to the text — rejected.",
+            entry["target_id"], element.text
         )
-        rohliste.remove(eintrag)
+        rawList.remove(entry)
 
-    for eintrag in list(rohliste):
-        if eintrag["aktion"] not in ("type", "check", "radio", "select"):
+    for entry in list(rawList):
+        if entry["action"] not in ("type", "check", "radio", "select"):
             continue
-        element = element_map[eintrag["ziel_id"]]
+        element = element_map[entry["target_id"]]
 
-        bezug_ueber_element = hat_thematischen_bezug(befehl_tokens, element)
-        wert_tokens = tokenisiere(str(eintrag.get("wert", "")))
-        bezug_ueber_wert = hat_ueberlappung(befehl_tokens, wert_tokens) if wert_tokens else True
+        reference_via_element = has_a_thematic_connection(command_tokens, element)
+        value_tokens = tokenize(str(entry.get("value", "")))
+        reference_by_value = has_overlap(command_tokens, value_tokens) if value_tokens else True
 
-        if bezug_ueber_element or bezug_ueber_wert:
+        if reference_via_element or reference_by_value:
             continue
 
         logger.warning(
-            "Plausibilitaetscheck (Formularfeld): '%s' (Text='%s', wert='%s') hat keinen Wortbezug "
-            "zum Befehl - verworfen (moegliche Zweckentfremdung).",
-            eintrag["ziel_id"], element.text, eintrag.get("wert", "")
+            "Validation Check (Form Field): '%s' (Text='%s', value='%s') has no connection to "
+            "Command — rejected (possible misuse).",
+            entry["target_id"], element.text, entry.get("value", "")
         )
-        rohliste.remove(eintrag)
+        rawList.remove(entry)
 
-    hat_lokale_formular_aktion = any(a["aktion"] in ("type", "check", "radio", "select") for a in rohliste)
+    hat_lokale_formular_aktion = any(a["action"] in ("type", "check", "radio", "select") for a in rawList)
 
     if hat_lokale_formular_aktion:
-        bereinigt = []
-        for eintrag in rohliste:
-            element = element_map[eintrag["ziel_id"]]
-            ist_navigations_klick = eintrag["aktion"] == "click" and element.istNavigationsLink
+        cleaned = []
+        for entry in rawList:
+            element = element_map[entry["target_id"]]
+            ist_navigations_klick = entry["action"] == "click" and element.isNavigationLin
             if ist_navigations_klick:
                 logger.warning(
-                    "Widerspruchs-Check: Navigations-Klick auf '%s' verworfen, da Zielelemente "
-                    "bereits auf aktueller Seite vorhanden sind.", eintrag["ziel_id"]
+                    "Validation Check (Navigation): Navigation-Click on '%s' rejected, as target elements "
+                    "are already present on the current page.", entry["target_id"]
                 )
                 continue
-            bereinigt.append(eintrag)
-        rohliste = bereinigt
+            cleaned.append(entry)
+        rawList = cleaned
 
-    gueltig = rohliste
+    valid = rawList
 
-    bereits_geklickt = {a["ziel_id"] for a in gueltig if a["aktion"] == "click"}
-    bediente_form_ids = {
-        element_map[a["ziel_id"]].formId
-        for a in gueltig
-        if element_map[a["ziel_id"]].formId and a["aktion"] in ("type", "check", "radio", "select")
+    already_clicked = {a["target_id"] for a in valid if a["action"] == "click"}
+    served_form_ids = {
+        element_map[a["target_id"]].formId
+        for a in valid
+        if element_map[a["target_id"]].formId and a["action"] in ("type", "check", "radio", "select")
     }
 
-    for form_id in bediente_form_ids:
-        for element in elemente:
-            ist_passender_submit = (
+    for form_id in served_form_ids:
+        for element in elements:
+            is_appropriate_submit = (
                 element.formId == form_id
-                and element.istSubmit
-                and element.id not in bereits_geklickt
+                and element.isSubmit
+                and element.id not in already_clicked
             )
-            if ist_passender_submit:
-                logger.info("Generischer Submit-Fix: ergaenze click auf '%s' (formId=%s)", element.id, form_id)
-                gueltig.append({"aktion": "click", "ziel_id": element.id, "wert": ""})
-                bereits_geklickt.add(element.id)
+            if is_appropriate_submit:
+                logger.info("Generic Submit Fix: Click \"Add\" '%s' (formId=%s)", element.id, form_id)
+                valid.append({"action": "click", "target_id": element.id, "value": ""})
+                already_clicked.add(element.id)
 
-    return gueltig
+    return valid
 
 
-@app.post("/befehl-analysieren")
-def analysiere_befehl(daten: WebDaten):
-    logger.info("Nutzer sagte: %s", daten.gesprochener_text)
+@app.post("/analyze-command")
+def analyze_command(daten: WebData):
+    logger.info("The User said: %s", daten.spoken_text)
 
-    elemente_dicts = [e.model_dump(exclude_none=True) for e in daten.elemente]
+    elemente_dicts = [e.model_dump(exclude_none=True) for e in daten.elements]
     user_prompt = (
-        f"Verfuegbare Elemente:\n{json.dumps(elemente_dicts, ensure_ascii=False)}\n\n"
-        f'Sprachbefehl: "{daten.gesprochener_text}"'
+        f"Available Elements:\n{json.dumps(elemente_dicts, ensure_ascii=False)}\n\n"
+        f'Voice command: "{daten.spoken_text}"'
     )
 
     try:
         response = ollama.chat(
             model=OLLAMA_MODELL,
             messages=[
-                {"role": "system", "content": SYSTEM_ANWEISUNG},
+                {"role": "system", "content": SYSTEM_INSTRUCTION},
                 {"role": "user", "content": user_prompt},
             ],
             options={"temperature": 0.0},
         )
-    except Exception as fehler:
-        logger.error("Ollama-Fehler: %s", fehler)
-        raise HTTPException(status_code=503, detail="KI-Modell nicht erreichbar. Laeuft Ollama?")
+    except Exception as error:
+        logger.error("Ollama-Fehler: %s", error)
+        raise HTTPException(status_code=503, detail="AI model not available. Is Ollama running?")
 
-    ki_antwort_text = response["message"]["content"]
-    logger.info("Rohantwort: %s", ki_antwort_text)
+    ai_response_text = response["message"]["content"]
+    logger.info("Rohantwort: %s", ai_response_text)
 
-    bereinigt = bereinige_llm_antwort(ki_antwort_text)
+    cleaned = clean_llm_response(ai_response_text)
 
     try:
-        aktionen_liste = json.loads(bereinigt)
-    except json.JSONDecodeError as fehler:
-        logger.error("JSON-Parsing fehlgeschlagen: %s", fehler)
-        return [{"aktion": "error", "ziel_id": None, "wert": None}]
+        actions_list = json.loads(cleaned)
+    except json.JSONDecodeError as error:
+        logger.error("JSON parsing failed: %s", error)
+        return [{"action": "error", "target_id": None, "value": None}]
 
-    if isinstance(aktionen_liste, dict):
-        aktionen_liste = [aktionen_liste]
+    if isinstance(actions_list, dict):
+        actions_list = [actions_list]
 
-    gueltige_aktionen = validiere_aktionen(aktionen_liste, daten.elemente, daten.gesprochener_text)
+    valid_actions = validate_actions(actions_list, daten.elements, daten.spoken_text)
 
-    if not gueltige_aktionen:
-        logger.warning("Keine gueltigen Aktionen nach Validierung uebrig.")
-        return [{"aktion": "error", "ziel_id": None, "wert": None}]
+    if not valid_actions:
+        logger.warning("No valid actions remain after validation.")
+        return [{"action": "error", "target_id": None, "value": None}]
 
-    return gueltige_aktionen
+    return valid_actions
 
 
 app.mount("/", StaticFiles(directory=".", html=True), name="static")

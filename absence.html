@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report a Child's Absence</title>
+    <style>
+        :root {
+            --primary: #47a8bd;
+            --danger: #e74c3c;
+            --text-dark: #2c3e50;
+            --bg-light: #f4f7f6;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); padding-bottom: 60px; }
+
+        .navbar { background: var(--white); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .brand { font-size: 22px; font-weight: bold; color: var(--primary); }
+        .nav-links { display: flex; gap: 15px; }
+
+        .site-link { color: var(--text-dark); background: transparent; text-decoration: none; font-weight: 600; padding: 10px 15px; }
+        .site-link.active-nav { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .site-btn { padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; background-color: var(--danger); color: var(--white); }
+
+        .page { padding: 40px 20px; max-width: 1000px; margin: 0 auto; }
+        .card { background: var(--white); padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); max-width: 600px; margin-top: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 8px; }
+        .form-input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">AI Web Assistant</div>
+        <div class="nav-links">
+            <a id="nav-home" href="index.html" class="site-link"
+               data-ai-hint="Overview page with dates, field trips, summer party, photo session, and pickup times">
+               🏠 Overview
+            </a>
+            <a id="nav-meal" href="meal.html" class="site-link active-nav"
+               data-ai-hint="Meal planning page: here you can order or cancel the lunch for the week and select a vegetarian menu">
+               🥦 Meal Plan
+            </a>
+            <a id="nav-absence" href="absence.html" class="site-link"
+               data-ai-hint="Page for Reporting a Child's Sickness or Absence">
+               🤒 Report Sickness or Absence
+            </a>
+        </div>
+    </nav>
+
+    <div class="page">
+        <h2>🤒 Report a Child Sick / Enter an Absence</h2>
+        <p style="color: #666;">Please report absences directly to the group team.</p>
+
+        <!-- <form> groups the input field and submit button for the generic
+             submit fix in the backend (formId + istSubmit). -->
+        <form id="absence-form" onsubmit="return false;">
+            <div class="card">
+                <div class="form-group">
+                    <label for="input-reason">Reason for the absence:</label>
+                    <input type="text" id="input-reason" class="form-input"
+                           placeholder="e.g., flu, vacation, etc."
+                           data-ai-hint="Reason for the sick leave or absence">
+                </div>
+
+                <button id="btn-absence-send" type="submit" class="site-btn"
+                        data-ai-submit
+                        data-ai-hint="Sends the sick leave report to the group team"
+                        onclick="sendSickLeaveReport()">
+                    Send Sick Leave Report
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function sendSickLeaveReport() {
+            const reason = document.getElementById('input-reason').value;
+            alert(`The child has been successfully reported as absent!\nReason: ${reason || 'No information available'}`);
+        }
+    </script>
+    <script src="plugin.js"></script>
+</body>
+</html>

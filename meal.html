@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Plan</title>
+    <style>
+        :root {
+            --primary: #47a8bd;
+            --primary-hover: #378b9c;
+            --danger: #e74c3c;
+            --text-dark: #2c3e50;
+            --bg-light: #f4f7f6;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); padding-bottom: 60px; }
+
+        .navbar { background: var(--white); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .brand { font-size: 22px; font-weight: bold; color: var(--primary); }
+        .nav-links { display: flex; gap: 15px; }
+
+        .site-link { color: var(--text-dark); background: transparent; text-decoration: none; font-weight: 600; padding: 10px 15px; }
+        .site-link.active-nav { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .site-btn { padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; background-color: var(--primary); color: var(--white); margin-right: 10px; }
+
+        .page { padding: 40px 20px; max-width: 1000px; margin: 0 auto; }
+        .card { background: var(--white); padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); max-width: 600px; margin-top: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .checkbox-group { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+        .alert-box { background: #fdf6ec; border-left: 5px solid #f39c12; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">AI Web Assistant</div>
+        <div class="nav-links">
+            <a id="nav-home" href="index.html" class="site-link"
+               data-ai-hint="Overview page with dates, field trips, summer party, photo session, and pickup times">
+               🏠 Overview
+            </a>
+            <a id="nav-meal" href="meal.html" class="site-link active-nav"
+               data-ai-hint="Meal planning page: here you can order or cancel the lunch for the week and select a vegetarian menu">
+               🥦 Meal Plan
+            </a>
+            <a id="nav-absence" href="absence.html" class="site-link"
+               data-ai-hint="Page for Reporting a Child's Sickness or Absence">
+               🤒 Report Sickness or Absence
+            </a>
+        </div>
+    </nav>
+
+    <div class="page">
+        <h2>🥦 Weekly Meal Order</h2>
+        <p style="color: #666;">Select the menu options for your child.</p>
+
+        <!-- <form> groups the checkbox and “Book” button for the generic submit fix
+             in the backend (formId + istSubmit). No site-specific code is needed anymore. -->
+        <form id="meal-form" onsubmit="return false;">
+            <div class="card">
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="chk-veggie" style="transform: scale(1.3);"
+                               data-ai-hint="Order only vegetarian meals">
+                        <label for="chk-veggie" style="margin: 0; cursor: pointer; font-weight: bold;">🌱 Vegetarian menu only, please</label>
+                    </div>
+                </div>
+
+                <div class="alert-box">
+                    This Week's Daily Special: <strong>Potato Casserole with Broccoli</strong>.
+                </div>
+
+                <button id="btn-book-meal" type="submit" class="site-btn"
+                        data-ai-submit
+                        data-ai-hint="Book or order lunch for the week"
+                        onclick="alert('Lunch has been booked!')">
+                    Book lunch now
+                </button>
+                <button id="btn-cancel-meal" type="button" class="site-btn" style="background-color: var(--danger);"
+                        data-ai-hint="Cancel the meal order for the entire week"
+                        onclick="alert('Order canceled.')">
+                    Cancel Week
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="plugin.js"></script>
+</body>
+</html>

@@ -4,9 +4,9 @@
     const CONFIG = Object.assign(
         {
             backendUrl: "http://127.0.0.1:8000/befehl-analysieren",
-            sprache: "de-DE",
+            language: "de-DE",
             highlightDauer: 650,
-            nachwirkDauer: 400,
+            residualEffectDuration: 400,
             requestTimeoutMs: 15000,
             maxAutoRetries: 1,
         },
@@ -14,33 +14,33 @@
     );
 
     // ============================================================================
-    // 1. GUI EINFUEGEN
+    // 1. INSERT GUI
     // ============================================================================
-    const kiHTML = `
-        <div id="ki-plugin-wrapper" style="position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: flex-end; font-family: sans-serif; z-index: 999999;">
-            <div id="ki-box" class="ki-box">
-                <div id="ki-title" class="ki-title">KI-Assistent</div>
-                <p id="ki-text" class="ki-text">Bereit.</p>
-                <div id="ki-preview" class="ki-preview"></div>
+    const aiHTML = `
+        <div id="ai-plugin-wrapper" style="position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: flex-end; font-family: sans-serif; z-index: 999999;">
+            <div id="ai-box" class="ai-box">
+                <div id="ai-title" class="ai-title">AI Assistant</div>
+                <p id="ai-text" class="ai-text">Bereit.</p>
+                <div id="ai-preview" class="ai-preview"></div>
             </div>
-            <button id="ki-btn" class="ki-btn" aria-label="Sprachassistent starten" type="button">🎙️</button>
+            <button id="ai-btn" class="ai-btn" aria-label="Launch the voice assistant" type="button">🎙️</button>
         </div>
     `;
-    document.body.insertAdjacentHTML("beforeend", kiHTML);
+    document.body.insertAdjacentHTML("beforeend", aiHTML);
 
     const styleTag = document.createElement("style");
     styleTag.textContent = `
-        .ki-box {
+        .ai-box {
             background: #2c3e50; color: white; padding: 15px 20px; border-radius: 14px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 15px; width: 280px;
             display: none; opacity: 0; transform: translateY(8px) scale(0.98);
             transition: opacity 220ms cubic-bezier(0.16,1,0.3,1), transform 220ms cubic-bezier(0.16,1,0.3,1);
         }
-        .ki-box.visible { display: block; opacity: 1; transform: translateY(0) scale(1); }
-        .ki-title { font-weight: bold; font-size: 14px; margin-bottom: 5px; color: #47a8bd; }
-        .ki-text { font-size: 13px; color: #ccc; margin: 0; }
-        .ki-preview { font-style: italic; color: #fff; font-size: 15px; margin-top: 8px; min-height: 18px; }
-        .ki-btn {
+        .ai-box.visible { display: block; opacity: 1; transform: translateY(0) scale(1); }
+        .ai-title { font-weight: bold; font-size: 14px; margin-bottom: 5px; color: #47a8bd; }
+        .ai-text { font-size: 13px; color: #ccc; margin: 0; }
+        .ai-preview { font-style: italic; color: #fff; font-size: 15px; margin-top: 8px; min-height: 18px; }
+        .ai-btn {
             width: 66px; height: 66px; border-radius: 50%;
             background: linear-gradient(135deg, #7047bd, #35607d);
             color: white; border: none; cursor: pointer;
@@ -48,51 +48,51 @@
             display: flex; align-items: center; justify-content: center; font-size: 26px;
             transition: transform 180ms cubic-bezier(0.16,1,0.3,1), box-shadow 180ms cubic-bezier(0.16,1,0.3,1);
         }
-        .ki-btn:hover { transform: scale(1.06); box-shadow: 0 10px 26px rgba(52,152,219,0.5); }
-        .ki-btn:active { transform: scale(0.94); }
-        .ki-btn.listening { animation: ki-pulse 1.4s ease-in-out infinite; background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .ai-btn:hover { transform: scale(1.06); box-shadow: 0 10px 26px rgba(52,152,219,0.5); }
+        .ai-btn:active { transform: scale(0.94); }
+        .ai-btn.listening { animation: ki-pulse 1.4s ease-in-out infinite; background: linear-gradient(135deg, #e74c3c, #c0392b); }
         @keyframes ki-pulse {
             0%, 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0.5); }
             50% { box-shadow: 0 0 0 14px rgba(231,76,60,0); }
         }
-        .kiga-highlight {
+        .ai-highlight {
             outline: 4px solid #8e44ad !important;
             outline-offset: 3px;
             border-radius: 8px;
             box-shadow: 0 0 0 6px rgba(142, 68, 173, 0.25) !important;
-            animation: kiga-highlight-pulse 900ms ease-in-out 2;
+            animation: ai-highlight-pulse 900ms ease-in-out 2;
             position: relative;
             z-index: 999998;
         }
-        .kiga-highlight.kiga-type { outline-color: #9c29b9 !important; box-shadow: 0 0 0 6px rgba(41,128,185,0.25) !important; }
-        .kiga-highlight.kiga-check,
-        .kiga-highlight.kiga-radio,
-        .kiga-highlight.kiga-select { outline-color: #27ae60 !important; box-shadow: 0 0 0 6px rgba(39,174,96,0.25) !important; }
-        @keyframes kiga-highlight-pulse { 0%, 100% { outline-offset: 3px; } 50% { outline-offset: 7px; } }
+        .ai-highlight.ai-type { outline-color: #9c29b9 !important; box-shadow: 0 0 0 6px rgba(41,128,185,0.25) !important; }
+        .ai-highlight.ai-check,
+        .ai-highlight.ai-radio,
+        .ai-highlight.ai-select { outline-color: #27ae60 !important; box-shadow: 0 0 0 6px rgba(39,174,96,0.25) !important; }
+        @keyframes ai-highlight-pulse { 0%, 100% { outline-offset: 3px; } 50% { outline-offset: 7px; } }
         @media (prefers-reduced-motion: reduce) {
-            .ki-box, .ki-btn, .kiga-highlight { transition: none !important; animation: none !important; }
+            .ai-box, .ai-btn, .ai-highlight { transition: none !important; animation: none !important; }
         }
     `;
     document.head.appendChild(styleTag);
 
-    const kiBtn = document.getElementById("ki-btn");
-    const kiBox = document.getElementById("ki-box");
-    const kiTitle = document.getElementById("ki-title");
-    const kiText = document.getElementById("ki-text");
-    const kiPreview = document.getElementById("ki-preview");
+    const aiBtn = document.getElementById("ai-btn");
+    const aiBox = document.getElementById("ai-box");
+    const aiTitle = document.getElementById("ai-title");
+    const aiText = document.getElementById("ai-text");
+    const aiPreview = document.getElementById("ai-preview");
 
     let hideTimer = null;
-    let idZaehler = 0;
+    let idCounter = 0;
 
-    function neueAutoId(praefix) {
-        idZaehler += 1;
-        return `ki-auto-${praefix}-${idZaehler}`;
+    function newAutoId(prefix) {
+        idCounter += 1;
+        return `ki-auto-${prefix}-${idCounter}`;
     }
 
     // ============================================================================
-    // 2. GENERISCHES SEITEN-SCANNEN
+    // 2. GENERIC PAGE SCAN
     // ============================================================================
-    function ermittleBeschreibung(el, fallback) {
+    function findDescription(el, fallback) {
         if (el.getAttribute("aria-label")) return el.getAttribute("aria-label");
         if (el.id) {
             const label = document.querySelector(`label[for="${el.id}"]`);
@@ -107,14 +107,14 @@
         return fallback || "";
     }
 
-    function ermittleFormGruppe(el) {
+    function findFormGroup(el) {
         const form = el.closest("form");
         if (!form) return null;
-        if (!form.id) form.id = neueAutoId("form");
+        if (!form.id) form.id = newAutoId("form");
         return form.id;
     }
 
-    function istSameOriginLink(el) {
+    function isSameOriginLink(el) {
         if (el.tagName.toLowerCase() !== "a") return false;
         const href = el.getAttribute("href");
         if (!href || href.startsWith("#") || href.startsWith("javascript:") || href.startsWith("mailto:") || href.startsWith("tel:")) {
@@ -128,265 +128,265 @@
         }
     }
 
-    function scanneWebsite() {
-        const gefundeneElemente = [];
-        const sichtbar = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
-        const AUSGESCHLOSSEN = "#ki-plugin-wrapper, #ki-plugin-wrapper *";
+    function scanWebsite() {
+        const foundElements = [];
+        const visible = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+        const EXCLUDED = "#ai-plugin-wrapper, #ai-plugin-wrapper *";
 
         document.querySelectorAll('button, a[href], input[type="submit"], input[type="button"]').forEach((el) => {
-            if (el.matches(AUSGESCHLOSSEN) || el.hasAttribute("data-ki-ignore") || !sichtbar(el)) return;
-            if (!el.id) el.id = neueAutoId("btn");
+            if (el.matches(EXCLUDED) || el.hasAttribute("data-ai-ignore") || !visible(el)) return;
+            if (!el.id) el.id = newAutoId("btn");
 
-            const istLink = el.tagName.toLowerCase() === "a";
-            const istSubmitTyp = el.type === "submit" || el.hasAttribute("data-ki-submit");
-            const formId = ermittleFormGruppe(el);
+            const isLink = el.tagName.toLowerCase() === "a";
+            const isSubmitType = el.type === "submit" || el.hasAttribute("data-ai-submit");
+            const formId = findFormGroup(el);
 
-            gefundeneElemente.push({
+            foundElements.push({
                 id: el.id,
                 typ: "button",
-                text: ermittleBeschreibung(el, el.id),
-                hinweis: el.getAttribute("data-ki-hint") || "",
-                istNavigationsLink: istLink && istSameOriginLink(el),
+                text: findDescription(el, el.id),
+                note: el.getAttribute("data-ai-hint") || "",
+                isNavigationLink: isLink && isSameOriginLink(el),
                 formId: formId,
-                istSubmit: istSubmitTyp,
+                isSubmit: isSubmitType,
             });
         });
 
         document
             .querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="search"], input[type="password"], input[type="url"], input:not([type]), textarea')
             .forEach((el) => {
-                if (el.matches(AUSGESCHLOSSEN) || el.hasAttribute("data-ki-ignore") || !sichtbar(el)) return;
-                if (!el.id) el.id = neueAutoId("input");
+                if (el.matches(EXCLUDED) || el.hasAttribute("data-ai-ignore") || !visible(el)) return;
+                if (!el.id) el.id = newAutoId("input");
 
-                gefundeneElemente.push({
+                foundElements.push({
                     id: el.id,
                     typ: "text-input",
-                    text: ermittleBeschreibung(el, el.id),
-                    hinweis: el.getAttribute("data-ki-hint") || "",
-                    formId: ermittleFormGruppe(el),
+                    text: findDescription(el, el.id),
+                    note: el.getAttribute("data-ai-hint") || "",
+                    formId: findFormGroup(el),
                 });
             });
 
         document.querySelectorAll('input[type="checkbox"]').forEach((el) => {
-            if (el.matches(AUSGESCHLOSSEN) || el.hasAttribute("data-ki-ignore") || !sichtbar(el)) return;
-            if (!el.id) el.id = neueAutoId("check");
+            if (el.matches(EXCLUDED) || el.hasAttribute("data-ai-ignore") || !visible(el)) return;
+            if (!el.id) el.id = newAutoId("check");
 
-            gefundeneElemente.push({
+            foundElements.push({
                 id: el.id,
                 typ: "checkbox",
-                text: ermittleBeschreibung(el, "Checkbox"),
-                hinweis: el.getAttribute("data-ki-hint") || "",
-                formId: ermittleFormGruppe(el),
+                text: findDescription(el, "Checkbox"),
+                note: el.getAttribute("data-ai-hint") || "",
+                formId: findFormGroup(el),
             });
         });
 
         document.querySelectorAll('input[type="radio"]').forEach((el) => {
-            if (el.matches(AUSGESCHLOSSEN) || el.hasAttribute("data-ki-ignore") || !sichtbar(el)) return;
-            if (!el.id) el.id = neueAutoId("radio");
+            if (el.matches(EXCLUDED) || el.hasAttribute("data-ai-ignore") || !visible(el)) return;
+            if (!el.id) el.id = newAutoId("radio");
 
-            gefundeneElemente.push({
+            foundElements.push({
                 id: el.id,
                 typ: "radio",
-                text: ermittleBeschreibung(el, el.name || "Option"),
-                hinweis: el.getAttribute("data-ki-hint") || "",
-                formId: ermittleFormGruppe(el),
+                text: findDescription(el, el.name || "Option"),
+                note: el.getAttribute("data-ai-hint") || "",
+                formId: findFormGroup(el),
             });
         });
 
         document.querySelectorAll("select").forEach((el) => {
-            if (el.matches(AUSGESCHLOSSEN) || el.hasAttribute("data-ki-ignore") || !sichtbar(el)) return;
-            if (!el.id) el.id = neueAutoId("select");
+            if (el.matches(EXCLUDED) || el.hasAttribute("data-ai-ignore") || !visible(el)) return;
+            if (!el.id) el.id = newAutoId("select");
 
             const optionen = Array.from(el.options).map((o) => o.text.trim());
-            gefundeneElemente.push({
+            foundElements.push({
                 id: el.id,
                 typ: "select",
-                text: ermittleBeschreibung(el, "Auswahl"),
-                hinweis: el.getAttribute("data-ki-hint") || "",
-                formId: ermittleFormGruppe(el),
+                text: findDescription(el, "Auswahl"),
+                note: el.getAttribute("data-ai-hint") || "",
+                formId: findFormGroup(el),
                 optionen: optionen,
             });
         });
 
-        return gefundeneElemente;
+        return foundElements;
     }
 
     // ============================================================================
-    // 3. STATUS-ANZEIGE
+    // 3. STATUS INDICATOR
     // ============================================================================
-    function setzeStatus(zustand, detailText = "", vorschauText = "") {
+    function setStatus(condition, detailText = "", previewText = "") {
         clearTimeout(hideTimer);
-        kiBox.classList.add("visible");
+        aiBox.classList.add("visible");
 
-        if (zustand === "hoeren") {
-            kiBtn.innerText = "🛑";
-            kiBtn.classList.add("listening");
-            kiTitle.innerText = "Ich höre zu...";
-            kiText.innerText = "Sprechen Sie Ihren Wunsch...";
-            kiPreview.innerText = "";
-        } else if (zustand === "denken") {
-            kiBtn.innerText = "🧠";
-            kiBtn.classList.remove("listening");
-            kiTitle.innerText = "KI denkt nach...";
-            kiText.innerText = "Verarbeite...";
-            kiPreview.innerText = `"${vorschauText}"`;
-        } else if (zustand === "erfolg") {
-            kiBtn.innerText = "✔️";
-            kiBtn.classList.remove("listening");
-            kiTitle.innerText = "Ausgeführt!";
-            kiText.innerText = detailText;
+        if (condition === "listening") {
+            aiBtn.innerText = "🛑";
+            aiBtn.classList.add("listening");
+            aiTitle.innerText = "I'm listening...";
+            aiText.innerText = "Tell me what you'd like to do...";
+            aiPreview.innerText = "";
+        } else if (condition === "thinking") {
+            aiBtn.innerText = "🧠";
+            aiBtn.classList.remove("listening");
+            aiTitle.innerText = "AI is thinking...";
+            aiText.innerText = "Processing...";
+            aiPreview.innerText = `"${previewText}"`;
+        } else if (condition === "success") {
+            aiBtn.innerText = "✔️";
+            aiBtn.classList.remove("listening");
+            aiTitle.innerText = "Completed!";
+            aiText.innerText = detailText;
             hideTimer = setTimeout(resetUI, 3000);
-        } else if (zustand === "fehler") {
-            kiBtn.innerText = "❌";
-            kiBtn.classList.remove("listening");
-            kiTitle.innerText = "Fehler";
-            kiText.innerText = detailText;
+        } else if (condition === "error") {
+            aiBtn.innerText = "❌";
+            aiBtn.classList.remove("listening");
+            aiTitle.innerText = "Error";
+            aiText.innerText = detailText;
             hideTimer = setTimeout(resetUI, 4000);
         }
     }
 
     function resetUI() {
-        kiBox.classList.remove("visible");
-        kiBtn.innerText = "🎙️";
-        kiBtn.classList.remove("listening");
+        aiBox.classList.remove("visible");
+        aiBtn.innerText = "🎙️";
+        aiBtn.classList.remove("listening");
     }
 
     // ============================================================================
-    // 4. BACKEND-KOMMUNIKATION & AUSFUEHRUNG
+    // 4. BACK-END COMMUNICATION & IMPLEMENTATION
     // ============================================================================
-    const warte = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-    let laufenderRequest = null;
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    let currentRequest = null;
 
-    async function sendeAnBackend(gesprochenerText, elementeListe, retryZaehler = 0) {
-        setzeStatus("denken", "", gesprochenerText);
+    async function sendToBackend(spokenText, elementsList, retryCounter = 0) {
+        setStatus("thinking", "", spokenText);
 
-        if (laufenderRequest) laufenderRequest.abort();
+        if (currentRequest) currentRequest.abort();
         const controller = new AbortController();
-        laufenderRequest = controller;
+        currentRequest = controller;
         const timeoutId = setTimeout(() => controller.abort(), CONFIG.requestTimeoutMs);
 
         try {
-            const antwort = await fetch(CONFIG.backendUrl, {
+            const answer = await fetch(CONFIG.backendUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ gesprochener_text: gesprochenerText, elemente: elementeListe }),
+                body: JSON.stringify({ spoken_text: spokenText, elemente: elementsList }),
                 signal: controller.signal,
             });
 
             clearTimeout(timeoutId);
 
-            if (!antwort.ok) {
-                setzeStatus("fehler", `Serverfehler (${antwort.status}).`);
+            if (!answer.ok) {
+                setStatus("error", `ServerError (${answer.status}).`);
                 return;
             }
 
-            const aktionen = await antwort.json();
-            if (!Array.isArray(aktionen) || aktionen.length === 0) {
-                setzeStatus("fehler", "Keine gültige Antwort erhalten.");
+            const actions = await answer.json();
+            if (!Array.isArray(actions) || actions.length === 0) {
+                setStatus("error", "No valid response was received.");
                 return;
             }
 
-            let erfolgsMeldungen = [];
+            let successReports = [];
 
-            for (const daten of aktionen) {
-                if (daten.aktion === "error" || !daten.ziel_id) continue;
+            for (const data of actions) {
+                if (data.action === "error" || !data.target_id) continue;
 
-                const zielElement = document.getElementById(daten.ziel_id);
-                if (!zielElement) continue;
+                const targetElement = document.getElementById(data.target_id);
+                if (!targetElement) continue;
 
-                zielElement.scrollIntoView({ behavior: "smooth", block: "center" });
-                const highlightKlasse = `kiga-${daten.aktion}`;
-                zielElement.classList.add("kiga-highlight", highlightKlasse);
+                targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+                const highlightClass = `kiga-${data.action}`;
+                targetElement.classList.add("ai-highlight", highlightClass);
 
-                const vorschauTexte = { click: "Klicke auf: ", type: "Trage ein in: ", check: "Aktiviere: ", radio: "Wähle: ", select: "Wähle aus: " };
-                const anzeigeText = (zielElement.innerText || zielElement.placeholder || daten.ziel_id || "").trim();
-                kiPreview.innerText = `${vorschauTexte[daten.aktion] || ""}${anzeigeText}`;
+                const previewTexts = { click: "Click on: ", type: "Type in: ", check: "Check: ", radio: "Select: ", select: "Select from: " };
+                const displayText = (targetElement.innerText || targetElement.placeholder || data.target_id || "").trim();
+                aiPreview.innerText = `${previewTexts[data.action] || ""}${displayText}`;
 
-                await warte(CONFIG.highlightDauer);
+                await wait(CONFIG.highlightDauer);
 
-                // Navigations-Logik: Wenn wir bereits auf der Zielseite sind, wird der
-                // Klick sinnvoll UEBERSPRUNGEN, aber als Erfolg gezaehlt (Fix: sonst
-                // erscheint faelschlich "Befehl konnte nicht zugeordnet werden").
-                if (daten.aktion === "click" && zielElement.tagName.toLowerCase() === "a" && istSameOriginLink(zielElement)) {
-                    const zielUrl = zielElement.getAttribute("href");
-                    const absoluteZielUrl = new URL(zielUrl, window.location.href);
-                    const bereitsAufZielseite = absoluteZielUrl.pathname === window.location.pathname;
+                // Navigation logic: If we are already on the destination page, the
+                // click is SKIPPED, but still counted as a success (Fix: otherwise
+                // the message “Command could not be mapped” appears incorrectly).
+                if (data.action === "click" && targetElement.tagName.toLowerCase() === "a" && isSameOriginLink(targetElement)) {
+                    const targetUrl = targetElement.getAttribute("href");
+                    const absoluteTargetUrl = new URL(targetUrl, window.location.href);
+                    const alreadyOnLandingPage = absoluteTargetUrl.pathname === window.location.pathname;
 
-                    if (bereitsAufZielseite) {
-                        zielElement.classList.remove("kiga-highlight", highlightKlasse);
-                        erfolgsMeldungen.push("Bereits auf der richtigen Seite");
+                    if (alreadyOnLandingPage) {
+                        targetElement.classList.remove("ai-highlight", highlightClass);
+                        successReports.push("Already on the right page");
                         continue;
                     }
 
-                    if (retryZaehler >= CONFIG.maxAutoRetries) {
-                        console.warn(`KI-Plugin: Anti-Loop-Schutz - Seitenwechsel nach ${retryZaehler} Retries blockiert.`);
-                        setzeStatus("fehler", "Befehl konnte nicht eindeutig zugeordnet werden.");
+                    if (retryCounter >= CONFIG.maxAutoRetries) {
+                        console.warn(`AI Plugin: Anti-Loop Protection - Page Break After ${retryCounter} Retries blocked.`);
+                        setStatus("error", "The command could not be unambiguously identified.");
                         return;
                     }
 
-                    sessionStorage.setItem("ki_plugin_pending_command", gesprochenerText);
-                    sessionStorage.setItem("ki_plugin_retry_count", String(retryZaehler + 1));
-                    setzeStatus("erfolg", "Wechsle zu Seite...");
-                    await warte(300);
-                    window.location.href = zielUrl;
+                    sessionStorage.setItem("ai_plugin_pending_command", spokenText);
+                    sessionStorage.setItem("ai_plugin_retry_count", String(retryCounter + 1));
+                    setStatus("success", "Go to page...");
+                    await wait(300);
+                    window.location.href = targetUrl;
                     return;
                 }
 
-                if (daten.aktion === "type") {
-                    zielElement.value = daten.wert;
-                    zielElement.dispatchEvent(new Event("input", { bubbles: true }));
-                    erfolgsMeldungen.push(`Eingetragen: "${daten.wert}"`);
-                } else if (daten.aktion === "check") {
-                    const sollAktivSein = daten.wert === "" || daten.wert === true || daten.wert === "true";
-                    zielElement.checked = sollAktivSein;
-                    zielElement.dispatchEvent(new Event("change", { bubbles: true }));
-                    erfolgsMeldungen.push(sollAktivSein ? "Aktiviert" : "Deaktiviert");
-                } else if (daten.aktion === "radio") {
-                    zielElement.checked = true;
-                    zielElement.dispatchEvent(new Event("change", { bubbles: true }));
-                    erfolgsMeldungen.push("Option gewählt");
-                } else if (daten.aktion === "select") {
-                    const optionsListe = Array.from(zielElement.options);
-                    const treffer = optionsListe.find(
-                        (o) => o.text.trim().toLowerCase() === String(daten.wert).trim().toLowerCase()
+                if (data.action === "type") {
+                    targetElement.value = data.value;
+                    targetElement.dispatchEvent(new Event("input", { bubbles: true }));
+                    successReports.push(`Registered: "${data.value}"`);
+                } else if (data.action === "check") {
+                    const shouldBeActive = data.value === "" || data.value === true || data.value === "true";
+                    targetElement.checked = shouldBeActive;
+                    targetElement.dispatchEvent(new Event("change", { bubbles: true }));
+                    successReports.push(shouldBeActive ? "Enabled" : "Disabled");
+                } else if (data.action === "radio") {
+                    targetElement.checked = true;
+                    targetElement.dispatchEvent(new Event("change", { bubbles: true }));
+                    successReports.push("Option selected");
+                } else if (data.action === "select") {
+                    const optionsList = Array.from(targetElement.options);
+                    const matches = optionsList.find(
+                        (o) => o.text.trim().toLowerCase() === String(data.value).trim().toLowerCase()
                     );
-                    if (treffer) {
-                        zielElement.value = treffer.value;
-                        zielElement.dispatchEvent(new Event("change", { bubbles: true }));
-                        erfolgsMeldungen.push(`Ausgewählt: "${treffer.text}"`);
+                    if (matches) {
+                        targetElement.value = matches.value;
+                        targetElement.dispatchEvent(new Event("change", { bubbles: true }));
+                        successReports.push(`Selected: "${matches.text}"`);
                     }
-                } else if (daten.aktion === "click") {
-                    zielElement.click();
-                    erfolgsMeldungen.push("Knopf geklickt");
+                } else if (data.action === "click") {
+                    targetElement.click();
+                    successReports.push("Button clicked");
                 }
 
-                await warte(CONFIG.nachwirkDauer);
-                zielElement.classList.remove("kiga-highlight", highlightKlasse);
+                await wait(CONFIG.residualEffectDuration);
+                targetElement.classList.remove("ai-highlight", highlightClass);
             }
 
-            setzeStatus(
-                erfolgsMeldungen.length > 0 ? "erfolg" : "fehler",
-                erfolgsMeldungen.length > 0 ? erfolgsMeldungen.join(" & ") : "Befehl konnte nicht zugeordnet werden."
+            setStatus(
+                successReports.length > 0 ? "success" : "error",
+                successReports.length > 0 ? successReports.join(" & ") : "The command could not be assigned."
             );
-        } catch (fehler) {
+        } catch (error) {
             clearTimeout(timeoutId);
-            setzeStatus("fehler", fehler.name === "AbortError" ? "Zeitüberschreitung bei der Server-Antwort." : "Server-Verbindung fehlgeschlagen.");
+            setStatus("error", error.name === "AbortError" ? "Timeout: The server response timed out." : "Server connection failed.");
         } finally {
-            laufenderRequest = null;
+            currentRequest = null;
         }
     }
 
     // ============================================================================
-    // 5. AUTOMATISCHES FORTSETZEN NACH SEITENWECHSEL
+    // 5. AUTOMATIC CONTINUATION AFTER A PAGE BREAK
     // ============================================================================
     window.addEventListener("DOMContentLoaded", () => {
-        const offenerBefehl = sessionStorage.getItem("ki_plugin_pending_command");
-        const retryZaehler = parseInt(sessionStorage.getItem("ki_plugin_retry_count") || "0", 10);
+        const openCommand = sessionStorage.getItem("ai_plugin_pending_command");
+        const retryCounter = parseInt(sessionStorage.getItem("ai_plugin_retry_count") || "0", 10);
 
-        if (offenerBefehl) {
-            sessionStorage.removeItem("ki_plugin_pending_command");
-            sessionStorage.removeItem("ki_plugin_retry_count");
-            setTimeout(() => sendeAnBackend(offenerBefehl, scanneWebsite(), retryZaehler), 700);
+        if (openCommand) {
+            sessionStorage.removeItem("ai_plugin_pending_command");
+            sessionStorage.removeItem("ai_plugin_retry_count");
+            setTimeout(() => sendToBackend(openCommand, scanWebsite(), retryCounter), 700);
         }
     });
 
@@ -397,47 +397,47 @@
 
     if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
-        recognition.lang = CONFIG.sprache;
+        recognition.lang = CONFIG.language;
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
-        kiBtn.addEventListener("click", () => {
-            if (kiBtn.classList.contains("listening")) {
+        aiBtn.addEventListener("click", () => {
+            if (aiBtn.classList.contains("listening")) {
                 recognition.stop();
                 resetUI();
             } else {
                 try {
                     recognition.start();
-                    setzeStatus("hoeren");
+                    setStatus("listening");
                 } catch (e) {
-                    setzeStatus("fehler", "Mikrofon konnte nicht gestartet werden.");
+                    setStatus("error", "The microphone could not be started.");
                 }
             }
         });
 
         recognition.onresult = (event) => {
             const text = event.results[0][0].transcript;
-            sendeAnBackend(text, scanneWebsite(), 0);
+            sendToBackend(text, scanWebsite(), 0);
         };
 
         recognition.onerror = (event) => {
             const meldungen = {
-                "not-allowed": "Mikrofon-Zugriff verweigert.",
-                "no-speech": "Keine Sprache erkannt. Bitte erneut versuchen.",
-                "audio-capture": "Kein Mikrofon gefunden.",
+                "not-allowed": "Microphone access denied.",
+                "no-speech": "No speech detected. Please try again.",
+                "audio-capture": "No microphone found.",
             };
-            setzeStatus("fehler", meldungen[event.error] || "Spracherkennung fehlgeschlagen.");
+            setStatus("error", meldungen[event.error] || "Speech recognition failed.");
         };
 
         recognition.onend = () => {
-            if (kiBtn.classList.contains("listening")) {
-                kiBtn.classList.remove("listening");
-                kiBtn.innerText = "🎙️";
+            if (aiBtn.classList.contains("listening")) {
+                aiBtn.classList.remove("listening");
+                aiBtn.innerText = "🎙️";
             }
         };
     } else {
-        kiBtn.addEventListener("click", () => {
-            setzeStatus("fehler", "Spracherkennung wird von diesem Browser nicht unterstützt. Bitte Chrome oder Edge verwenden.");
+        aiBtn.addEventListener("click", () => {
+            setStatus("error", "Speech recognition is not supported by this browser. Please use Chrome or Edge.");
         });
     }
 })();

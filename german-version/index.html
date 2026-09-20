@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website – Overview</title>
+    <title>Website – Übersicht</title>
     <style>
         :root {
             --primary: #47a8bd;
@@ -38,61 +38,61 @@
 </head>
 <body>
 
-    <!-- NAVIGATION BAR
-         data-ai-hint helps the generic AI match ambiguous terms (e.g., “appointments”)
-         to the correct page without requiring the backend to have site-specific knowledge. -->
+    <!-- NAVIGATIONSLEISTE
+         data-ki-hint hilft der generischen KI, mehrdeutige Begriffe (z.B. "Termine")
+         der richtigen Seite zuzuordnen, ohne dass das Backend Site-Wissen braucht. -->
     <nav class="navbar">
         <div class="brand">AI Web Assistant</div>
         <div class="nav-links">
             <a id="nav-home" href="index.html" class="site-link active-nav"
-               data-ai-hint="Overview page with dates, field trips, summer party, photo session, and pickup times">
-               🏠 Overview
+               data-ki-hint="Übersichtsseite mit Terminen, Ausflügen, Sommerfest, Fotograf-Termin und Abholzeiten">
+               🏠 Übersicht
             </a>
-            <a id="nav-meal" href="meal.html" class="site-link"
-               data-ai-hint="Meal planning page: here you can order or cancel the lunch for the week and select a vegetarian menu">
-               🥦 Meal Plan
+            <a id="nav-essen" href="essen.html" class="site-link"
+               data-ki-hint="Essensplan-Seite: hier wird das Mittagessen bestellt oder storniert und vegetarisches Menü gewählt">
+               🥦 Essensplan
             </a>
-            <a id="nav-absence" href="absence.html" class="site-link"
-               data-ai-hint="Page for Reporting a Child's Sickness or Absence">
-               🤒 Report Sickness or Absence
+            <a id="nav-abmelden" href="abmelden.html" class="site-link"
+               data-ki-hint="Seite zum Krankmelden bzw. Abwesenheit des Kindes eintragen">
+               🤒 Kind abmelden
             </a>
         </div>
     </nav>
 
     <div class="page">
         <div class="alert-box">
-            <strong>📢 Important Information:</strong> Tomorrow we're going on our big field trip to the woods. Please make sure your child brings weather-appropriate clothing!
+            <strong>📢 Wichtige Info:</strong> Morgen findet unser großer Ausflug in den Wald statt. Bitte wetterfeste Kleidung mitgeben!
         </div>
 
-        <h2>Digital Bulletin Board – “Sunshine” Group</h2>
+        <h2>Digitale Pinnwand – Gruppe „Sonnenschein“</h2>
         <div class="grid">
             <div class="card">
-                <h3>📅 Next Dates</h3>
-                <p>• 15.07. – Summer Party starting at 2:00 p.m.</p>
-                <p>• 22.07. – Photo session with the photographer</p>
+                <h3>📅 Nächste Termine</h3>
+                <p>• 15.07. – Sommerfest ab 14:00 Uhr</p>
+                <p>• 22.07. – Fotograf kommt in die Kita</p>
                 <br>
-                <button id="btn-summer" class="site-btn" style="background-color: #95a5a6;"
-                        data-ai-hint="Shows the summer care plan"
-                        onclick="alert('Summer Care Schedule Now Available.')">
-                    View Summer Care Options
+                <button id="btn-sommer" class="site-btn" style="background-color: #95a5a6;"
+                        data-ki-hint="Zeigt den Sommerbetreuungs-Plan an"
+                        onclick="alert('Sommerbetreuungs-Plan geöffnet.')">
+                    Sommer-Betreuung einsehen
                 </button>
             </div>
             <div class="card">
-                <h3>⏰ Regular pickup times</h3>
-                <p><strong>Half-day:</strong> 12:00 – 12:30 p.m.</p>
-                <p><strong>Full-day:</strong> 15:00 – 16:30 p.m.</p>
+                <h3>⏰ Reguläre Abholzeiten</h3>
+                <p><strong>Halbtags:</strong> 12:00 – 12:30 Uhr</p>
+                <p><strong>Ganztags:</strong> 15:00 – 16:30 Uhr</p>
                 <br>
-                <button id="btn-contact" class="site-btn" style="background-color: var(--success);"
-                        data-ai-hint="Send a message to the daycare center director"
-                        onclick="alert('Message sent!')">
-                    Send a message to management
+                <button id="btn-kontakt" class="site-btn" style="background-color: var(--success);"
+                        data-ki-hint="Sendet eine Nachricht an die Kita-Leitung"
+                        onclick="alert('Nachricht gesendet!')">
+                    Nachricht an die Leitung senden
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Generic, site-independent plugin. Optional configuration BEFORE loading:
-    <script>window.KI_PLUGIN_CONFIG = { backendUrl: “http://127.0.0.1:8000/befehl-analysieren” };</script>
+    <!-- Generisches, Site-unabhängiges Plugin. Optional Konfiguration VOR dem Laden:
+    <script>window.KI_PLUGIN_CONFIG = { backendUrl: "http://127.0.0.1:8000/befehl-analysieren" };</script>
     -->
     <script src="plugin.js"></script>
 </body>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kind abmelden</title>
+    <style>
+        :root {
+            --primary: #47a8bd;
+            --danger: #e74c3c;
+            --text-dark: #2c3e50;
+            --bg-light: #f4f7f6;
+            --white: #ffffff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); padding-bottom: 60px; }
+
+        .navbar { background: var(--white); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .brand { font-size: 22px; font-weight: bold; color: var(--primary); }
+        .nav-links { display: flex; gap: 15px; }
+
+        .site-link { color: var(--text-dark); background: transparent; text-decoration: none; font-weight: 600; padding: 10px 15px; }
+        .site-link.active-nav { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .site-btn { padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; border: none; cursor: pointer; background-color: var(--danger); color: var(--white); }
+
+        .page { padding: 40px 20px; max-width: 1000px; margin: 0 auto; }
+        .card { background: var(--white); padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); max-width: 600px; margin-top: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 8px; }
+        .form-input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">AI Web Assistant</div>
+        <div class="nav-links">
+            <a id="nav-home" href="index.html" class="site-link"
+               data-ki-hint="Übersichtsseite mit Terminen, Ausflügen, Sommerfest, Fotograf-Termin und Abholzeiten">
+               🏠 Übersicht
+            </a>
+            <a id="nav-essen" href="essen.html" class="site-link"
+               data-ki-hint="Essensplan-Seite: hier wird das Mittagessen bestellt oder storniert und vegetarisches Menü gewählt">
+               🥦 Essensplan
+            </a>
+            <a id="nav-abmelden" href="abmelden.html" class="site-link active-nav"
+               data-ki-hint="Seite zum Krankmelden bzw. Abwesenheit des Kindes eintragen">
+               🤒 Kind abmelden
+            </a>
+        </div>
+    </nav>
+
+    <div class="page">
+        <h2>🤒 Kind krankmelden / Abwesenheit eingeben</h2>
+        <p style="color: #666;">Übermitteln Sie Ausfälle direkt an das Gruppen-Team.</p>
+
+        <!-- <form> gruppiert Eingabefeld + Absende-Button für den generischen
+             Submit-Fix im Backend (formId + istSubmit). -->
+        <form id="abmelden-formular" onsubmit="return false;">
+            <div class="card">
+                <div class="form-group">
+                    <label for="input-grund">Grund für das Fehlen:</label>
+                    <input type="text" id="input-grund" class="form-input"
+                           placeholder="z.B. Grippaler Infekt, Urlaub, etc."
+                           data-ki-hint="Grund der Krankmeldung bzw. Abwesenheit">
+                </div>
+
+                <button id="btn-abmelden-senden" type="submit" class="site-btn"
+                        data-ki-submit
+                        data-ki-hint="Sendet die Krankmeldung an das Gruppen-Team"
+                        onclick="sendeAbmeldung()">
+                    Krankmeldung abschicken
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function sendeAbmeldung() {
+            const grund = document.getElementById('input-grund').value;
+            alert(`Das Kind wurde erfolgreich abgemeldet!\nGrund: ${grund || 'Keine Angabe'}`);
+        }
+    </script>
+    <script src="plugin.js"></script>
+</body>
+</html>
